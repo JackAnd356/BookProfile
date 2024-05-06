@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<title>BookProfile</title>
+</head>
+
+<body>
+    <form action="http://localhost:<%= port %>/lookupRequest" method="post" id="application-form" onsubmit="return confirmSubmit()">
+        <fieldset>
+			<label>Author: <input type="text" placeholder="Mark Twain" name="author" required></label>
+			<label>Book Title: <input type="text" placehoder="Adventures of Huckleberry Finn" name="book" required></label>
+		</fieldset>
+
+		<button type="reset">Reset</button>
+		<button type="submit">Find Book</button>
+	</form>
+</body>
+
+<script>
+	function confirmSubmit() {
+		return window.confirm("Are you sure this is the correct info about this book");
+	}
+</script>
