@@ -41,6 +41,11 @@ app.get("/apply", (req, res) => {
     res.render("apply", {port: port});
 });
 
+app.get("/post", (req, res) => {
+    res.render("review"); 
+});
+
+
 app.post("/application", async (req, res) => {
     const currentDate = new Date();
     const formattedDate = "Task completed at " + currentDate.toString();
