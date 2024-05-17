@@ -15,12 +15,14 @@ app.set("views", path.resolve(__dirname, "templates"));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const uri = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@cluster0.ffhbi5b.mongodb.net/${process.env.MONGO_DB_NAME}`;
+const matildaUri = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@cluster0.ffhbi5b.mongodb.net/${process.env.MONGO_DB_NAME}`;
+const jackUri = `mongodb+srv://jackanderson124680:Karate77@cluster0.ffhbi5b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+console.log(jackUri);
 
 let client;
 (async () => {
     try {
-        client = new MongoClient(uri);
+        client = new MongoClient(jackUri);
         await client.connect();
 
         app.listen(port, () => {
@@ -40,47 +42,69 @@ app.get("/", (req, res) => {
 
 /*Render lookup page*/
 app.get("/lookup", (req, res) => {
-    res.render("lookup"); 
+    res.render("lookup", {port: port}); 
 });
 
 /*To display API lookup and insert user's input to mongo*/
-app.post("/lookupResults", async (req, res) => {
+app.post('/lookupRequest', async (req, res) => {
     const title = req.body.title;
     const author = req.body.author;
 
-    async function main() {
-        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
-        try {
-            await client.connect();
-        
-            /* Inserting user data*/
-            let data = {title: title, author: author};
-            await insertData(client, databaseAndCollection, data);
+    try {
+        const response = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}`);
+        const data = await response.json();
 
-        } catch (e) {
-            console.error(e);
-        } finally {
-            await client.close();
+        if (data.docs.length === 0) {
+            res.send('No books found.');
+        } else {
+            const book = data.docs[0];
+
+            async function mongoInsert() {
+                try {
+
+                    let bookData = {
+                        title: book.title,
+                        author: book.author_name ? book.author_name.join(', ') : 'N/A',
+                        first_publish_year: book.first_publish_year || 'N/A',
+                        publisher: book.publisher ? book.publisher[0] : 'N/A',
+                        isbn: book.isbn ? book.isbn[0] : 'N/A'
+                    };
+
+                    await insertData(client, bookData);
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    await client.close();
+                }
+            }
+
+            async function insertData(client, newData) {
+                const database = client.db(process.env.MONGO_DB_NAME);
+                const collection = database.collection("bookProfile");
+                await collection.insertOne(newData);
+            }
+
+            await mongoInsert().catch(console.error);
+
+            res.send(`
+                <h1>Book Information</h1>
+                <p><strong>Title:</strong> ${book.title}</p>
+                <p><strong>Author:</strong> ${book.author_name ? book.author_name.join(', ') : 'N/A'}</p>
+                <p><strong>First Published Year:</strong> ${book.first_publish_year || 'N/A'}</p>
+                <p><strong>Publisher:</strong> ${book.publisher ? book.publisher[0] : 'N/A'}</p>
+                <p><strong>ISBN:</strong> ${book.isbn ? book.isbn[0] : 'N/A'}</p>
+                <a href="/">Search another book</a>
+            `);
         }
+    } catch (error) {
+        res.send('Error occurred while searching for the book.');
     }
-
-    async function insertData(client, databaseAndCollection, newData) {
-        const database = client.db(databaseAndCollection.db); 
-        const collection = database.db(process.env.MONGO_DB_NAME).collection("bookProfile");
-
-        const result = await collection.insertOne(newData); 
-    }
-
-    main().catch(console.error); 
-
-    res.render("processApplication", {title: title, author: author});
 });
 
 /*To display user's read books*/
-app.post("/profile", async (req, res) => {
-    const minGPA = parseFloat(req.body.gpa);
-    const collection = client.db(process.env.MONGO_DB_NAME).collection("applications");
-    const applications = await collection.find({ gpa: { $gte: minGPA } }).toArray();
+app.get("/profile", async (req, res) => {
+    const collection = client.db(process.env.MONGO_DB_NAME).collection("bookProfile");
+    const applications = await collection.find({}).toArray();
 
     output = `<table border='1' style="double"><tr><th>Title</th><th>Book</th></tr>`;
     applications.forEach(appl => {
