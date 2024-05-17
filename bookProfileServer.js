@@ -7,7 +7,7 @@ const path = require('path');
 dotenv.config();
 
 const app = express();
-const port = process.argv[2] || 3000;
+const port = 3000;
 const prompt = "Stop to shutdown the server: ";
 
 app.set('view engine', 'ejs');
@@ -33,79 +33,61 @@ let client;
     }
 })();
 
+/*Render home/"index" page*/
 app.get("/", (req, res) => {
     res.render("index");
 });
 
-app.get("/apply", (req, res) => {
-    res.render("apply", {port: port});
+/*Render lookup page*/
+app.get("/lookup", (req, res) => {
+    res.render("lookup"); 
 });
 
-app.get("/post", (req, res) => {
-    res.render("review"); 
+/*To display API lookup and insert user's input to mongo*/
+app.post("/lookupResults", async (req, res) => {
+    const title = req.body.title;
+    const author = req.body.author;
+
+    async function main() {
+        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+        try {
+            await client.connect();
+        
+            /* Inserting user data*/
+            let data = {title: title, author: author};
+            await insertData(client, databaseAndCollection, data);
+
+        } catch (e) {
+            console.error(e);
+        } finally {
+            await client.close();
+        }
+    }
+
+    async function insertData(client, databaseAndCollection, newData) {
+        const database = client.db(databaseAndCollection.db); 
+        const collection = database.db(process.env.MONGO_DB_NAME).collection("bookProfile");
+
+        const result = await collection.insertOne(newData); 
+    }
+
+    main().catch(console.error); 
+
+    res.render("processApplication", {title: title, author: author});
 });
 
-
-app.post("/application", async (req, res) => {
-    const currentDate = new Date();
-    const formattedDate = "Task completed at " + currentDate.toString();
-    const name = req.body.name;
-    const email = req.body.email;
-    const gpa = req.body.gpa;
-    const background = req.body.background;
-
-    const collection = client.db(process.env.MONGO_DB_NAME).collection("applications");
-
-    const application = {
-        name: name,
-        email: email,
-        gpa: parseFloat(gpa),
-        background: background,
-        submittedAt: new Date()
-    };
-
-    const result = await collection.insertOne(application);
-
-    res.render("processApplication", {name: name, email: email, gpa: gpa, background: background, time: formattedDate});
-});
-
-app.get("/review", (req, res) => {
-    res.render("reviewApplication", {port: port});
-});
-
-app.post("/reviewSubmit", async (req, res) => {
-    const email = req.body.email;
-    const collection = client.db(process.env.MONGO_DB_NAME).collection("applications");
-    const application = await collection.findOne({ email: email });
-    const formattedDate = "Task completed at " + application.submittedAt;
-    res.render("processReviewApplication", {name: application.name, email: application.email, gpa: application.gpa, background: application.background, time: formattedDate});
-});
-
-app.get("/gpa", (req, res) => {
-    res.render("adminGFA", {port: port});
-});
-
-app.post("/gpaSubmit", async (req, res) => {
+/*To display user's read books*/
+app.post("/profile", async (req, res) => {
     const minGPA = parseFloat(req.body.gpa);
     const collection = client.db(process.env.MONGO_DB_NAME).collection("applications");
     const applications = await collection.find({ gpa: { $gte: minGPA } }).toArray();
 
-    output = `<table border='1'><tr><th>Name</th><th>GPA</th></tr>`;
+    output = `<table border='1' style="double"><tr><th>Title</th><th>Book</th></tr>`;
     applications.forEach(appl => {
-        output += `<tr><td>${appl.name}</td><td>${appl.gpa}</td></tr>`;
+        output += `<tr><td>${appl.title}</td><td>${appl.author}</td></tr>`;
     });
     output += `</table>`;
-    res.render("processAdminGFA", {table: output.trim()});
-});
-
-app.get("/remove", (req, res) => {
-    res.render("adminRemove", {port: port});
-});
-
-app.post("/removeSubmit", async (req, res) => {
-    const collection = client.db(process.env.MONGO_DB_NAME).collection("applications");
-    const result = await collection.deleteMany({});
-    res.render("processAdminRemove", {numRemoved: result.deletedCount});
+    res.render("profile", {profileTable: output.trim()});
 });
 
 process.stdin.on("readable", function () {
