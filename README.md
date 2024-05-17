@@ -5,5 +5,5 @@ Submitted by: ________ (directory id: ___
 Group Members: Matilda Goh (mgoh12), Jack Anderson (___)
 App Description: Allow users to find and store user info about the books they've read
 YouTube Video Link: 
-APIs:VideoApp (http:notrealvideoapp.what), SoundApp (http:notreadlsoundapp.what)
+APIs: OpenLibrary (https://openlibrary.org/dev/docs/api/search), SoundApp (http:notreadlsoundapp.what)
 Contact Email: superterp@notreal.address.what
