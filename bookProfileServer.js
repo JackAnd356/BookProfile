@@ -87,7 +87,8 @@ app.post('/lookupRequest', async (req, res) => {
             await mongoInsert().catch(console.error);
 
             res.send(`
-                <h1>Book Information</h1>
+                <h1>Book Was Added to Your Profile</h1>
+                <h2>Book Information</h2>
                 <p><strong>Title:</strong> ${book.title}</p>
                 <p><strong>Author:</strong> ${book.author_name ? book.author_name.join(', ') : 'N/A'}</p>
                 <p><strong>First Published Year:</strong> ${book.first_publish_year || 'N/A'}</p>
@@ -104,11 +105,11 @@ app.post('/lookupRequest', async (req, res) => {
 /*To display user's read books*/
 app.get("/profile", async (req, res) => {
     const collection = client.db(process.env.MONGO_DB_NAME).collection("bookProfile");
-    const applications = await collection.find({}).toArray();
+    const books = await collection.find({}).toArray();
 
-    output = `<table border='1' style="double"><tr><th>Title</th><th>Book</th></tr>`;
-    applications.forEach(appl => {
-        output += `<tr><td>${appl.title}</td><td>${appl.author}</td></tr>`;
+    output = `<table border='1' style="double"><tr><th>Title</th><th>Book</th><th>Publisher</th><th>ISBN #</th></tr>`;
+    books.forEach(book => {
+        output += `<tr><td>${book.title}</td><td>${book.author}</td><td>${book.publisher}</td><td>${book.isbn}</td></tr>`;
     });
     output += `</table>`;
     res.render("profile", {profileTable: output.trim()});
