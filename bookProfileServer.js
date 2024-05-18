@@ -15,9 +15,9 @@ app.set("views", path.resolve(__dirname, "templates"));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("BookProfile"));
+
 const matildaUri = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@cluster0.ffhbi5b.mongodb.net/${process.env.MONGO_DB_NAME}`;
 const jackUri = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@cluster0.ffhbi5b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
-console.log(jackUri);
 
 let client;
 (async () => {
@@ -104,7 +104,10 @@ app.post('/lookupRequest', async (req, res) => {
 
 /*To display user's read books*/
 app.get("/profile", async (req, res) => {
-    const collection = client.db(process.env.MONGO_DB_NAME).collection("bookProfile");
+    await client.connect(); 
+
+    const database = client.db(process.env.MONGO_DB_NAME);
+    const collection = database.collection("bookProfile");
     const books = await collection.find({}).toArray();
 
     output = `<table border='1' style="double"><tr><th>Title</th><th>Book</th><th>Publisher</th><th>ISBN #</th></tr>`;
