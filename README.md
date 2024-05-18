@@ -1,7 +1,7 @@
 # BookProfile
 Website that finds and stores user info about the books they've read, using expressJS and MongoDB
 
-Submitted by: ________ (directory id: ___
+Submitted by: Matilda Goh (directory id: mgoh12)
 Group Members: Matilda Goh (mgoh12), Jack Anderson (___)
 App Description: Allow users to find and store user info about the books they've read
 YouTube Video Link: 

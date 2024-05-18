@@ -14,7 +14,7 @@ app.set('view engine', 'ejs');
 app.set("views", path.resolve(__dirname, "templates"));
 
 app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(express.static("BookProfile"));
 const matildaUri = `mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@cluster0.ffhbi5b.mongodb.net/${process.env.MONGO_DB_NAME}`;
 const jackUri = `mongodb+srv://jackanderson124680:Karate77@cluster0.ffhbi5b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
 console.log(jackUri);
@@ -26,7 +26,7 @@ let client;
         await client.connect();
 
         app.listen(port, () => {
-            console.log(`Server is running on port ${port}`);
+            console.log(`Server is running on port http://localhost:${port}`);
             process.stdout.write(prompt);
         });
     } catch (err) {

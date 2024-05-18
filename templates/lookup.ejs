@@ -6,12 +6,17 @@
 	<title>BookProfile</title>
 </head>
 
-<body>
+<body style="background-color: beige">
+	<h1 style="color: skyblue;">Look-Up Page</h1>
     <form action="http://localhost:<%= port %>/lookupRequest" method="post" id="application-form" onsubmit="return confirmSubmit()">
         <fieldset>
 			<label>Author: <input type="text" placeholder="Mark Twain" name="author" required></label>
+			<br>
+			<br>
 			<label>Book Title: <input type="text" placehoder="Adventures of Huckleberry Finn" name="title" required></label>
 		</fieldset>
+
+		<br>
 
 		<button type="reset">Reset</button>
 		<button type="submit">Find Book</button>
